@@ -233,6 +233,7 @@ struct platform_data {
     bool is_slimbus_interface;
     bool is_internal_codec;
     int mono_speaker;
+    bool camcorder_stereo;
     /* Audio calibration related functions */
     void                       *acdb_handle;
     int                        voice_feature_set;
@@ -444,6 +445,7 @@ static const char * device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_IN_BT_SCO_MIC_WB] = "bt-sco-mic-wb",
     [SND_DEVICE_IN_BT_SCO_MIC_WB_NREC] = "bt-sco-mic-wb",
     [SND_DEVICE_IN_CAMCORDER_MIC] = "camcorder-mic",
+    [SND_DEVICE_IN_CAMCORDER_STEREO_DMIC] = "camcorder-stereo-dmic",
     [SND_DEVICE_IN_VOICE_DMIC] = "voice-dmic-ef",
     [SND_DEVICE_IN_VOICE_SPEAKER_DMIC] = "voice-speaker-dmic-ef",
     [SND_DEVICE_IN_VOICE_SPEAKER_QMIC] = "voice-speaker-qmic",
@@ -585,6 +587,7 @@ static int acdb_device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_IN_BT_SCO_MIC_WB] = 38,
     [SND_DEVICE_IN_BT_SCO_MIC_WB_NREC] = 123,
     [SND_DEVICE_IN_CAMCORDER_MIC] = 4,
+    [SND_DEVICE_IN_CAMCORDER_STEREO_DMIC] = 131,
     [SND_DEVICE_IN_VOICE_DMIC] = 41,
     [SND_DEVICE_IN_VOICE_SPEAKER_DMIC] = 43,
     [SND_DEVICE_IN_VOICE_SPEAKER_QMIC] = 19,
@@ -726,6 +729,7 @@ static struct name_to_index snd_device_name_index[SND_DEVICE_MAX] = {
     {TO_NAME_INDEX(SND_DEVICE_IN_BT_SCO_MIC_WB)},
     {TO_NAME_INDEX(SND_DEVICE_IN_BT_SCO_MIC_WB_NREC)},
     {TO_NAME_INDEX(SND_DEVICE_IN_CAMCORDER_MIC)},
+    {TO_NAME_INDEX(SND_DEVICE_IN_CAMCORDER_STEREO_DMIC)},
     {TO_NAME_INDEX(SND_DEVICE_IN_VOICE_DMIC)},
     {TO_NAME_INDEX(SND_DEVICE_IN_VOICE_SPEAKER_DMIC)},
     {TO_NAME_INDEX(SND_DEVICE_IN_VOICE_SPEAKER_QMIC)},
@@ -1951,6 +1955,7 @@ void *platform_init(struct audio_device *adev)
     my_data->ext_disp_type = EXT_DISPLAY_TYPE_NONE;
     my_data->hw_dep_fd = -1;
     my_data->mono_speaker = SPKR_1;
+    my_data->camcorder_stereo = false;
 
     be_dai_name_table = NULL;
 
@@ -1961,6 +1966,11 @@ void *platform_init(struct audio_device *adev)
         my_data->fluence_type = FLUENCE_DUAL_MIC;
     } else {
         my_data->fluence_type = FLUENCE_NONE;
+    }
+
+    property_get("persist.audio.camcorder.stereo", value, "false");
+    if (!strncmp("true", value, sizeof("true"))) {
+        my_data->camcorder_stereo = true;
     }
 
     if (my_data->fluence_type != FLUENCE_NONE) {
@@ -3829,6 +3839,8 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
                     (my_data->source_mic_type & SOURCE_DUAL_MIC) &&
                     (channel_count == 2))
                     snd_device = SND_DEVICE_IN_HANDSET_STEREO_DMIC;
+                else if (my_data->camcorder_stereo)
+                    snd_device = SND_DEVICE_IN_CAMCORDER_STEREO_DMIC;
                 else
                     snd_device = SND_DEVICE_IN_CAMCORDER_MIC;
             }
