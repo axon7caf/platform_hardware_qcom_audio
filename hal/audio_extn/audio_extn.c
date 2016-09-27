@@ -1209,6 +1209,7 @@ void audio_extn_perf_lock_release(int *handle)
 }
 #endif /* KPI_OPTIMIZE_ENABLED */
 
+#ifdef SSR_ENABLED
 static int audio_extn_set_multichannel_mask(struct audio_device *adev,
                                             struct stream_in *in,
                                             struct audio_config *config,
@@ -1257,6 +1258,7 @@ int audio_extn_check_and_set_multichannel_usecase(struct audio_device *adev,
                                                 update_params);
     }
 }
+#endif
 
 #ifdef APTX_DECODER_ENABLED
 static void audio_extn_aptx_dec_set_license(struct audio_device *adev)
